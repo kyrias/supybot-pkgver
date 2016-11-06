@@ -50,44 +50,43 @@ class Pkgver(callbacks.Plugin):
     """Look up Arch Linux package versions"""
     threaded = True
 
-    def pkgver(self, irc, msg, args, package):
+    def pkgver(self, irc, msg, args, query):
         """Look up Arch Linux package versions"""
         url = 'https://www.archlinux.org/packages/search/json/?name={:s}'
-        res = requests.get(url.format(package))
+        res = requests.get(url.format(query))
 
-        repos = {}
-        for result in res.json()['results']:
-            repo = result.get('repo')
-            arch = result.get('arch')
+        results = {}
+        for pkg in res.json()['results']:
+            pkgname = pkg.get('pkgname')
+            repo = pkg.get('repo')
 
-            if repo not in repos:
-                repos[repo] = {}
+            epoch = pkg.get('epoch')
+            pkgver = pkg.get('pkgver')
+            pkgrel = pkg.get('pkgrel')
 
-            repos[repo][arch] = result
+            arch = pkg.get('arch')
+
+            if epoch:
+                version = '{}:{}-{}'.format(epoch, pkgver, pkgrel)
+            else:
+                version = '{}-{}'.format(pkgver, pkgrel)
+
+            repo_pkgname = '{}/{}'.format(repo, pkgname)
+            if repo_pkgname not in results:
+                results[repo_pkgname] = {}
+
+            if version not in results[repo_pkgname]:
+                results[repo_pkgname][version] = []
+
+            results[repo_pkgname][version].append(arch)
 
         output = []
-        for repo in repos:
-            arches = repos[repo]
-            seen = {}
+        for pkg in results:
+            line = '{}:'.format(pkg)
 
-            for arch in arches:
-                pkg = arches[arch]
-                ver = '{}-{}'.format(pkg['pkgver'], pkg['pkgrel'])
-
-                if ver in seen:
-                    seen[ver]['arch'].append(arch)
-                else:
-                    pkg['arch'] = [arch]
-                    seen[ver] = pkg
-
-            line = '{repo}/{pkgname}:'.format(repo=repo,
-                                              pkgname=package)
-
-            for pkg in seen:
-                arch = seen[pkg]['arch']
-                arch.sort()
-                seen[pkg]['arch'] = '/'.join(arch)
-                line += ' {arch}:{pkgver}'.format(**seen[pkg])
+            for version in results[pkg]:
+                arches = results[pkg][version]
+                line += ' {}::{}'.format('/'.join(arches), version)
 
             output.append(line)
 

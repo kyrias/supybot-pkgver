@@ -49,9 +49,9 @@ def configure(advanced):
 
 
 Pkgver = conf.registerPlugin('Pkgver')
-# This is where your configuration variables (if any) should go.  For example:
-# conf.registerGlobalValue(Pkgver, 'someConfigVariableName',
-#     registry.Boolean(False, _("""Help for someConfigVariableName.""")))
+conf.registerGlobalValue(Pkgver, 'archwebSearchUrl',
+        registry.String('https://www.archlinux.org/packages/search',
+                        _('''The archweb search endpoint to use.''')))
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

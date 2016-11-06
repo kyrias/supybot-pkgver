@@ -28,6 +28,7 @@
 
 ###
 
+from urllib.parse import quote
 import json
 
 import requests
@@ -52,8 +53,9 @@ class Pkgver(callbacks.Plugin):
 
     def pkgver(self, irc, msg, args, query):
         """Look up Arch Linux package versions"""
-        url = 'https://www.archlinux.org/packages/search/json/?name={:s}'
-        res = requests.get(url.format(query))
+        baseUrl = self.registryValue('archwebSearchUrl')
+        url = '{}/json/?name={:s}'.format(baseUrl, quote(query))
+        res = requests.get(url)
 
         results = {}
         for pkg in res.json()['results']:

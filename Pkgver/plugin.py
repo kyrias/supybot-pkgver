@@ -55,10 +55,15 @@ class Pkgver(callbacks.Plugin):
         """Look up Arch Linux package versions"""
         baseUrl = self.registryValue('archwebSearchUrl')
         url = '{}/json/?name={:s}'.format(baseUrl, quote(query))
-        res = requests.get(url)
+
+        res = requests.get(url).json()
+
+        if not res['results']:
+            irc.reply('No results.')
+            return
 
         results = {}
-        for pkg in res.json()['results']:
+        for pkg in res['results']:
             pkgname = pkg.get('pkgname')
             repo = pkg.get('repo')
 
